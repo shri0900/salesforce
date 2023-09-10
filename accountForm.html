@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Data to Salesforce</title>
+    <script>
+        let accessToken = "";
+        let instanceUrl = "";
+
+        function authenticate() {
+            // Salesforce OAuth2 endpoint
+            const url = "https://login.salesforce.com/services/oauth2/authorize?" +
+                "response_type=token&" +
+                "client_id=3MVG9wt4IL4O5wvIrDAEJFQDJvM6StZCok08Z8QaRez4KeFiNgTRDelHBHkOO0xZPdoTWVJXE8wiqMFwEa.F6&" +
+                "redirect_uri=http://127.0.0.1:5500/form.html";
+
+            window.location.href = url;
+        }
+
+        function parseReturnedHash() {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            accessToken = params.get("access_token");
+            instanceUrl = params.get("instance_url");
+        }
+
+        function sendToSalesforce() {
+            const accountName = document.getElementById("accountName").value;
+            if (accessToken && instanceUrl) {
+                fetch(instanceUrl + "/services/data/v53.0/sobjects/Account", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + accessToken,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        Name: accountName
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    alert("Data sent to Salesforce!");
+                })
+                .catch(error => {
+                    console.error("Error sending data to Salesforce:", error);
+                });
+            } else {
+                alert("Not authenticated with Salesforce.");
+            }
+        }
+
+        window.onload = () => {
+            parseReturnedHash();
+        }
+    </script>
+</head>
+<body>
+    <button onclick="authenticate()">Authenticate with Salesforce</button>
+    <br><br>
+    <input type="text" id="accountName" placeholder="Enter Account Name">
+    <button onclick="sendToSalesforce()">Send to Salesforce</button>
+</body>
+</html>
